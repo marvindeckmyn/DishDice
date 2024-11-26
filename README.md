@@ -1,36 +1,70 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🎲 DishDice
 
-## Getting Started
+DishDice is an interactive web application that helps you decide what to cook based on the ingredients you have available. Simply input your ingredients, roll the dice, and get a random recipe suggestion!
 
-First, run the development server:
+## 🚧 Current Development Status
 
+This project is currently in active development. The initial version includes a basic React frontend with the following features:
+- Ingredient input and management
+- Random recipe suggestions based on available ingredients
+- Clean, responsive user interface
+
+## 🔮 Planned Features
+
+Future updates will include:
+- Backend API integration with a recipe database
+- User authentication and profiles
+- Save favorite recipes
+- Share recipes with friends
+- Dietary restrictions and preferences
+- Recipe rating system
+- Mobile responsiveness improvements
+
+## 🛠️ Tech Stack
+
+- Frontend:
+  - Next.js
+  - React
+  - TypeScript
+  - Tailwind CSS
+  - Shadcn UI
+
+## 🚀 Getting Started
+
+### Prerequisites
+- Node.js (Latest LTS version)
+- npm
+
+### Installation
+
+1. Clone the repository
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone https://github.com/marvindeckmyn/DishDice.git
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+2. Install dependencies
+```bash
+cd DishDice
+npm install
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+3. Run the development server
+```bash
+npm run dev
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+4. Open [http://localhost:3000](http://localhost:3000) in your browser
 
-## Learn More
+## 👨‍💻 Contributing
 
-To learn more about Next.js, take a look at the following resources:
+While this project is currently in early development, contributions, suggestions, and feedback are welcome! Feel free to open issues or submit pull requests.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 📝 License
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+This project is licensed under the MIT License - see the LICENSE file for details.
 
-## Deploy on Vercel
+## 🤝 Contact
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Marvin Deckmyn - [GitHub Profile](https://github.com/marvindeckmyn)
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Project Link: [https://github.com/marvindeckmyn/DishDice](https://github.com/marvindeckmyn/DishDice)
