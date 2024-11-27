@@ -65,17 +65,6 @@ const RecipeDisplay: React.FC<{ recipe: SpoonacularRecipe }> = ({ recipe }) => (
                 ))}
             </ol>
         </div>
-
-        {recipe.sourceUrl && (
-            <a
-                href={recipe.sourceUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mt-4 text-blue-600 hover:text-blue-800 inline-block"
-            >
-                View Original Recipe
-            </a>
-        )}
     </div>
 )
 
