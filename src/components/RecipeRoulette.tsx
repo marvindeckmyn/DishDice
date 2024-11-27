@@ -3,56 +3,14 @@ import React, { useState, useCallback, useMemo } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { ChefHat, Trash2, Plus, Dice6 } from 'lucide-react';
+import { ChefHat, Trash2, Plus, Dice6, Loader2 } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-
-interface Recipe {
-    id: string;
-    title: string;
-    ingredients: string[];
-    instructions: string[];
-    cookingTime: string;
-    difficulty: 'easy' | 'medium' | 'hard';
-    servings: number;
-}
+import { recipeService, SpoonacularRecipe } from '@/services/recipeService';
 
 interface IngredientTagProps {
     ingredient: string;
     onRemove: () => void;
 }
-
-const MOCK_RECIPES: Recipe[] = [
-    {
-        id: '1',
-        title: "Pasta Primavera",
-        ingredients: ["pasta", "tomato", "zucchini", "garlic"],
-        instructions: [
-            "Boil water and cook pasta according to package instructions",
-            "Dice vegetables while pasta cooks",
-            "Sauté garlic until fragrant",
-            "Add vegetables and cook until tender",
-            "Combine with pasta and serve hot"
-        ],
-        cookingTime: "20 mins",
-        difficulty: "easy",
-        servings: 4
-    },
-    {
-        id: '2',
-        title: "Quick Stir Fry",
-        ingredients: ["rice", "carrot", "soy sauce", "chicken"],
-        instructions: [
-            "Cook rice in rice cooker or pot",
-            "Cut chicken into bite-sized pieces",
-            "Stir fry chicken until golden",
-            "Add vegetables and cook until tender",
-            "Season with soy sauce and serve over rice"
-        ],
-        cookingTime: "15 mins",
-        difficulty: "medium",
-        servings: 2
-    }
-];
 
 const IngredientTag: React.FC<IngredientTagProps> = ({ ingredient, onRemove }) => (
     <div className="flex items-center gap-1 bg-blue-100 rounded-full px-3 py-1 animate-fadeIn">
@@ -67,44 +25,66 @@ const IngredientTag: React.FC<IngredientTagProps> = ({ ingredient, onRemove }) =
     </div>
 );
 
-const RecipeDisplay: React.FC<{ recipe: Recipe }> = ({ recipe }) => (
+const RecipeDisplay: React.FC<{ recipe: SpoonacularRecipe }> = ({ recipe }) => (
     <div className="mt-4 p-4 bg-gray-50 rounded-lg animate-fadeIn">
-        <h3 className="text-xl font-bold mb-2">{recipe.title}</h3>
-        <div className="flex gap-4 mb-4">
-            <span className="text-sm text-gray-600">⏱️ {recipe.cookingTime}</span>
-            <span className="text-sm text-gray-600">👥 Serves {recipe.servings}</span>
-            <span className="text-sm text-gray-600">
-                📊 {recipe.difficulty.charAt(0).toUpperCase() + recipe.difficulty.slice(1)}
-            </span>
+        <div className="pb-4 flex items-start gap-4">
+            {recipe.image && (
+                <img
+                    src={recipe.image}
+                    alt={recipe.title}
+                    className="w-32 h-32 object-cover rounded-lg"
+                />
+            )}
+            <div className="flex-1">
+                <h3 className="text-xl font-bold mb-2">{recipe.title}</h3>
+                <div className="flex gap-4 mb-4">
+                    <span className="text-sm text-gray-600">⏱️ {recipe.readyInMinutes} mins</span>
+                    <span className="text-sm text-gray-600">👥 Serves {recipe.servings}</span>
+                </div>                
+            </div>
         </div>
+
         <div className="mb-4">
             <h4 className="font-semibold mb-2">Ingredients:</h4>
             <ul className="list-disc list-inside space-y-1">
-                {recipe.ingredients.map((ing, index) => (
-                    <li key={index} className="text-gray-700 capitalize">
-                        {ing}
+                {recipe.extendedIngredients.map((ing, index) => (
+                    <li key={index} className="text-gray-700">
+                        {ing.original}
                     </li>
                 ))}
             </ul>
         </div>
+
         <div>
             <h4 className="font-semibold mb-2">Instructions:</h4>
-            <ol className="space-y-2">
-                {recipe.instructions.map((instruction, index) => (
-                    <li key={index} className="text-gray-700 ml-4">
-                        {instruction}
+            <ol className="list-decimal space-y-2">
+                {recipe.analyzedInstructions[0]?.steps.map((step) => (
+                    <li key={step.number} className="text-gray-700 ml-6 pl-2">
+                        {step.step}
                     </li>
                 ))}
             </ol>
         </div>
+
+        {recipe.sourceUrl && (
+            <a
+                href={recipe.sourceUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-4 text-blue-600 hover:text-blue-800 inline-block"
+            >
+                View Original Recipe
+            </a>
+        )}
     </div>
 )
 
 const RecipeRoulette: React.FC = () => {
     const [ingredients, setIngredients] = useState<string[]>([]);
     const [currentIngredient, setCurrentIngredient] = useState('');
-    const [recipe, setRecipe] = useState<Recipe | null>(null);
+    const [recipe, setRecipe] = useState<SpoonacularRecipe | null>(null);
     const [error, setError] = useState<string>('');
+    const [isLoading, setIsLoading] =  useState(false);
 
     const handleIngredientAdd = useCallback(() => {
         const trimmedIngredient = currentIngredient.trim().toLowerCase();
@@ -125,22 +105,28 @@ const RecipeRoulette: React.FC = () => {
         setIngredients(prev => prev.filter((_, i) => i !== index));
     }, []);
 
-    const findRecipe = useCallback(() => {
-        const matchedRecipes = MOCK_RECIPES.filter(recipe =>
-            recipe.ingredients.some(ing =>
-                ingredients.includes(ing.toLowerCase())
-            )
-        );
-
-        if (matchedRecipes.length === 0) {
-            setError('No recipes found with these ingredients. Try different ingredients!');
-            setRecipe(null);
-            return;
-        }
-
-        const randomRecipe = matchedRecipes[Math.floor(Math.random() * matchedRecipes.length)];
-        setRecipe(randomRecipe);
+    const findRecipe = useCallback(async () => {
+        setIsLoading(true);
         setError('');
+        try {
+            const recipes = await recipeService.searchRecipesByIngredients(ingredients);
+
+            if (recipes.length === 0) {
+                setError('No recipes found with these ingredients. Try different ingredients!');
+                setRecipe(null);
+                return;
+            }
+
+            const randomRecipe = recipes[Math.floor(Math.random() * recipes.length)];
+
+            const fullRecipe = await recipeService.getRecipeDetails(randomRecipe.id);
+            setRecipe(fullRecipe);
+        } catch (err) {
+            setError('Failed to fetch recipes. Please try again later.');
+            setRecipe(null);
+        } finally {
+            setIsLoading(false);
+        }
     }, [ingredients]);
 
     const isIngredientValid = useMemo(() =>
@@ -193,11 +179,21 @@ const RecipeRoulette: React.FC = () => {
                     <Button
                         onClick={findRecipe}
                         className="w-full"
-                        disabled={ingredients.length === 0}
+                        disabled={ingredients.length === 0 || isLoading}
                     >
-                        <Dice6 className="w-4 h-4 mr-2" />
+                        {isLoading ? (
+                            <Loader2 className="w--4 h-4 mr-2 animate-spin" />
+                        ) : (
+                            <Dice6 className="w-4 h-4 mr-2" />
+                        )}
                         Find Random Dish
                     </Button>
+
+                    {error && (
+                        <Alert variant="destructive">
+                            <AlertDescription>{error}</AlertDescription>
+                        </Alert>
+                    )}
 
                     {recipe && <RecipeDisplay recipe={recipe} />}
                 </CardContent>
